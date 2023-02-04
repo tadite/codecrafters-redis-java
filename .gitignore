@@ -5,3 +5,4 @@ java_redis.jar
 *.iws
 
 .gradle
+*.class
