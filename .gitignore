@@ -1,1 +1,7 @@
 java_redis.jar
+
+*.iml
+*.ipr
+*.iws
+
+.gradle
