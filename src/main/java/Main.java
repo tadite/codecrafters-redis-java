@@ -37,7 +37,7 @@ public class Main {
             }
         }
     }
-// echo -n '*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n' | nc 172.21.80.1 6379
+
     private static void handle(Socket socket) throws IOException {
         InputStream is = socket.getInputStream();
         OutputStream os = socket.getOutputStream();
@@ -64,6 +64,7 @@ public class Main {
                 handleCommand(args, os);
 
                 System.out.println();
+                os.flush();
             }
         }
     }

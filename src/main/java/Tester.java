@@ -14,7 +14,7 @@ public class Tester {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                 socket.getOutputStream().write(
-                        "*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n".getBytes(StandardCharsets.UTF_8)
+                        "*1\r\n$4\r\nPING\r\n".getBytes(StandardCharsets.UTF_8)
                 );
                 String input = new Scanner(System.in).nextLine();
                 writer.write(input);
