@@ -4,6 +4,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class Main {
 
@@ -21,19 +22,26 @@ public class Main {
         try {
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
-            System.out.println("Wait for connection from client.");
-            clientSocket = serverSocket.accept();
-            System.out.println("Client connected.");
-            handle(clientSocket);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
-        } finally {
+        }
+
+        while (true) {
             try {
-                if (clientSocket != null) {
-                    clientSocket.close();
-                }
+                System.out.println("Wait for connection from client.");
+                clientSocket = serverSocket.accept();
+                System.out.println("Client connected.");
+                handle(clientSocket);
             } catch (IOException e) {
                 System.out.println("IOException: " + e.getMessage());
+            } finally {
+                try {
+                    if (clientSocket != null) {
+                        clientSocket.close();
+                    }
+                } catch (IOException e) {
+                    System.out.println("IOException: " + e.getMessage());
+                }
             }
         }
     }
@@ -41,37 +49,44 @@ public class Main {
     private static void handle(Socket socket) throws IOException {
         InputStream is = socket.getInputStream();
         OutputStream os = socket.getOutputStream();
-        while (true) {
-            int c = is.read();
-            if (c == '*') {
-                int argCount = readNumber(is);
-                System.out.println("*" + argCount);
-                byte[][] args = new byte[argCount][];
-                for (int argIndex = 0; argIndex < argCount; argIndex++) {
-                    c = is.read();
-                    if (c != '$') {
-                        throw new ProtocolParseException(String.format("Expected $ but found %c", c));
-                    }
-                    int argBytesSize = readNumber(is);
-                    byte[] arg = new byte[argBytesSize];
-                    for (int argByteIdx = 0; argByteIdx < argBytesSize; argByteIdx++) {
-                        arg[argByteIdx] = (byte) is.read();
-                    }
-                    readLineEnd(is);
-                    args[argIndex] = arg;
+        int c = is.read();
+        if (c == '*') {
+            int argCount = readNumber(is);
+            byte[][] args = new byte[argCount][];
+            for (int argIndex = 0; argIndex < argCount; argIndex++) {
+                c = is.read();
+                if (c != '$') {
+                    throw new ProtocolParseException(String.format("Expected $ but found %c", c));
                 }
-
-                handleCommand(args, os);
-
-                System.out.println();
-                os.flush();
+                int argBytesSize = readNumber(is);
+                byte[] arg = new byte[argBytesSize];
+                for (int argByteIdx = 0; argByteIdx < argBytesSize; argByteIdx++) {
+                    arg[argByteIdx] = (byte) is.read();
+                }
+                readLineEnd(is);
+                args[argIndex] = arg;
             }
+            log(args);
+
+            handleCommand(args, os);
+
+            System.out.println();
+            os.flush();
         }
+    }
+
+    private static void log(byte[][] args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('*').append(args.length).append("\r\n");
+        for (byte[] arg : args) {
+            sb.append('$').append(new String(arg)).append("\r\n");
+        }
+        System.out.println(sb.toString());
     }
 
     private static void handleCommand(byte[][] args, OutputStream os) throws IOException {
         String name = new String(args[0]);
-        if ("PING".equals(name)) {
+        if ("PING".equalsIgnoreCase(name)) {
             if (args.length == 1) {
                 response(os, PONG);
             } else if (args.length == 2) {
@@ -87,9 +102,12 @@ public class Main {
     }
 
     private static void response(OutputStream os, byte[] msg) throws IOException {
-        os.write('+');
-        os.write(msg);
-        os.write(LINE_END);
+        byte[] resp = new byte[msg.length + 3];
+        resp[0] = '+';
+        System.arraycopy(msg, 0, resp, 1, msg.length);
+        resp[resp.length-2] = '\r';
+        resp[resp.length-1] = '\n';
+        os.write(resp);
     }
 
     private static void readLineEnd(InputStream is) throws IOException {
