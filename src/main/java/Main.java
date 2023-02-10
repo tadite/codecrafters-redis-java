@@ -102,12 +102,15 @@ public class Main {
     }
 
     private static void response(OutputStream os, byte[] msg) throws IOException {
-        byte[] resp = new byte[msg.length + 3];
-        resp[0] = '+';
-        System.arraycopy(msg, 0, resp, 1, msg.length);
-        resp[resp.length-2] = '\r';
-        resp[resp.length-1] = '\n';
-        os.write(resp);
+//        byte[] resp = new byte[msg.length + 3];
+//        resp[0] = '+';
+//        System.arraycopy(msg, 0, resp, 1, msg.length);
+//        resp[resp.length-2] = '\r';
+//        resp[resp.length-1] = '\n';
+//        os.write(resp);
+        os.write('+');
+        os.write(msg);
+        os.write(LINE_END);
     }
 
     private static void readLineEnd(InputStream is) throws IOException {
