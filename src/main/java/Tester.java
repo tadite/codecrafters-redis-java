@@ -16,9 +16,10 @@ public class Tester {
                 socket.getOutputStream().write(
                         "*1\r\n$4\r\nPING\r\n".getBytes(StandardCharsets.UTF_8)
                 );
-                String input = new Scanner(System.in).nextLine();
-                writer.write(input);
-                writer.flush();
+                socket.getOutputStream().flush();
+//                String input = new Scanner(System.in).nextLine();
+//                writer.write(input);
+//                writer.flush();
 
                 String line;
                 while ((line = reader.readLine()) != null) {
